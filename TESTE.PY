@@ -54,7 +54,6 @@ ARQUIVO_B = os.path.join(BASE_DIR, "BASE_GRUPO_B.csv")
 ARQUIVO_T = os.path.join(BASE_DIR, "BASE_GRUPO_T.csv")
 
 # ── Carrega as duas bases CSV do Google Drive ──────────────────────────────
-# COLE AQUI OS IDs DOS SEUS DOIS ARQUIVOS DO GOOGLE DRIVE:
 ID_DRIVE_B = "1lAvLH4o9xW8vkpGtbJJbB69Dbkj_7VKj"
 ID_DRIVE_T = "1gui04ulKXvqrgr_eJGIQveHaf8CKpe78"
 
@@ -62,27 +61,21 @@ URL_B = f"https://drive.google.com/uc?id={ID_DRIVE_B}"
 URL_T = f"https://drive.google.com/uc?id={ID_DRIVE_T}"
 
 try:
-    # Baixa o Grupo B se não existir
     if not os.path.exists(ARQUIVO_B):
         logger.info("🔄 Baixando BASE - GRUPO B.csv do Google Drive...")
         gdown.download(URL_B, ARQUIVO_B, quiet=False)
         
-    # Baixa o Grupo T se não existir
     if not os.path.exists(ARQUIVO_T):
         logger.info("🔄 Baixando BASE - GRUPO T.csv do Google Drive...")
         gdown.download(URL_T, ARQUIVO_T, quiet=False)
 
     logger.info("📊 Lendo e unindo os arquivos CSV...")
     
-    # Lê os arquivos como texto (dtype=str) para evitar erros e economizar muita memória RAM
-    # (Se o seu Excel separou por vírgula em vez de ponto-e-vírgula, mude sep=';' para sep=',')
-    df_b = pd.read_csv(ARQUIVO_B, sep=';', dtype=str, on_bad_lines='skip')
-    df_t = pd.read_csv(ARQUIVO_T, sep=';', dtype=str, on_bad_lines='skip')
+    # Adicionado encoding='latin-1' para suportar acentuação e caracteres especiais do Excel
+    df_b = pd.read_csv(ARQUIVO_B, sep=';', dtype=str, encoding='latin-1', on_bad_lines='skip')
+    df_t = pd.read_csv(ARQUIVO_T, sep=';', dtype=str, encoding='latin-1', on_bad_lines='skip')
     
-    # Junta as duas tabelas em uma só
     df = pd.concat([df_b, df_t], ignore_index=True)
-    
-    # Limpa espaços em branco dos nomes das colunas
     df.columns = df.columns.str.strip()
     
     logger.info(f"✅ Bases unidas com sucesso! Total de registros: {len(df)}")
@@ -317,7 +310,7 @@ async def mensagens_gerais(update: Update, context: ContextTypes.DEFAULT_TYPE):
             datetime.now()
         )
 
-# ── Comando /status ────────────────────────────────/status ────────────────
+# ── Comando /status ────────────────────────────────────────────────────────
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         hoje = date.today()
@@ -346,14 +339,13 @@ async def limpar_agora(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"❌ Erro no /limpar: {e}")
 
-# ── Inicialização ──────────────────────────────────────────────────────────
+# ── Inicialização ────────────────────────────────__________________________
 async def inicializar_bot(application):
     print("🤖 Bot de Consulta iniciado com os dois arquivos CSV unificados!")
     await gerenciador.limpar_mensagens_diarias(application)
 
 # ── Main ───────────────────────────────────────────────────────────────────
 def main():
-    # INSIRA SEU TOKEN AQUI
     TOKEN = "8033688177:AAGbKMl6mDVrsTxF4VwDaWo_tc5ORRC8QII"
 
     request = HTTPXRequest(
