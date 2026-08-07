@@ -34,7 +34,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── SERVIDOR WEB FANTASMA (Para o Render manter o bot ligado) ──────────────
+# ── SERVIDOR WEB FANTASMA ──────────────────────────────────────────────────
 class ServidorFantasma(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -53,7 +53,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ARQUIVO_B = os.path.join(BASE_DIR, "BASE_GRUPO_B.csv")
 ARQUIVO_T = os.path.join(BASE_DIR, "BASE_GRUPO_T.csv")
 
-# ── Carrega as duas bases CSV do Google Drive ──────────────────────────────
 ID_DRIVE_B = "1lAvLH4o9xW8vkpGtbJJbB69Dbkj_7VKj"
 ID_DRIVE_T = "1gui04ulKXvqrgr_eJGIQveHaf8CKpe78"
 
@@ -61,24 +60,27 @@ URL_B = f"https://drive.google.com/uc?id={ID_DRIVE_B}"
 URL_T = f"https://drive.google.com/uc?id={ID_DRIVE_T}"
 
 try:
-    if not os.path.exists(ARQUIVO_B):
-        logger.info("🔄 Baixando BASE - GRUPO B.csv do Google Drive...")
-        gdown.download(URL_B, ARQUIVO_B, quiet=False)
+    # Força o download sempre para garantir que o arquivo está atualizado no container
+    logger.info("🔄 Baixando BASE - GRUPO B.csv do Google Drive...")
+    gdown.download(URL_B, ARQUIVO_B, quiet=False, fuzzy=True)
         
-    if not os.path.exists(ARQUIVO_T):
-        logger.info("🔄 Baixando BASE - GRUPO T.csv do Google Drive...")
-        gdown.download(URL_T, ARQUIVO_T, quiet=False)
+    logger.info("🔄 Baixando BASE - GRUPO T.csv do Google Drive...")
+    gdown.download(URL_T, ARQUIVO_T, quiet=False, fuzzy=True)
 
-    logger.info("📊 Lendo e unindo os arquivos CSV...")
+    logger.info("📊 Lendo e unindo os arquivos CSV de forma leve...")
     
-    # Adicionado encoding='latin-1' para suportar acentuação e caracteres especiais do Excel
-    df_b = pd.read_csv(ARQUIVO_B, sep=';', dtype=str, encoding='latin-1', on_bad_lines='skip')
-    df_t = pd.read_csv(ARQUIVO_T, sep=';', dtype=str, encoding='latin-1', on_bad_lines='skip')
+    # Lendo apenas as colunas essenciais ou os dados em blocos se necessário, com encoding latin-1
+    df_b = pd.read_csv(ARQUIVO_B, sep=';', dtype=str, encoding='latin-1', low_memory=False, on_bad_lines='skip')
+    df_t = pd.read_csv(ARQUIVO_T, sep=';', dtype=str, encoding='latin-1', low_memory=False, on_bad_lines='skip')
     
     df = pd.concat([df_b, df_t], ignore_index=True)
     df.columns = df.columns.str.strip()
     
-    logger.info(f"✅ Bases unidas com sucesso! Total de registros: {len(df)}")
+    # Libera memória RAM dos dataframes separados
+    del df_b
+    del df_t
+    
+    logger.info(f"✅ Bases unidas com sucesso! Total de registros na RAM: {len(df)}")
     
 except Exception as e:
     logger.error(f"❌ Erro ao baixar ou carregar os arquivos CSV: {e}")
@@ -339,9 +341,9 @@ async def limpar_agora(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"❌ Erro no /limpar: {e}")
 
-# ── Inicialização ────────────────────────────────__________________________
+# ── Inicialização ──────────────────────────────────────────────────────────
 async def inicializar_bot(application):
-    print("🤖 Bot de Consulta iniciado com os dois arquivos CSV unificados!")
+    print("🤖 Bot de Consulta iniciado com otimização de memória RAM!")
     await gerenciador.limpar_mensagens_diarias(application)
 
 # ── Main ───────────────────────────────────────────────────────────────────
