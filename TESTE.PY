@@ -364,7 +364,9 @@ def main():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, mensagens_gerais))
 
     print("🚀 Iniciando bot...")
-    app.run_polling(drop_pending_updates=True)
+    
+    # IMPORTANTE: Força o modo polling limpando atualizações pendentes que travam o bot
+    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
