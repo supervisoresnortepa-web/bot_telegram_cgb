@@ -60,23 +60,20 @@ URL_B = f"https://drive.google.com/uc?id={ID_DRIVE_B}"
 URL_T = f"https://drive.google.com/uc?id={ID_DRIVE_T}"
 
 try:
-    # Força o download sempre para garantir que o arquivo está atualizado no container
     logger.info("🔄 Baixando BASE - GRUPO B.csv do Google Drive...")
-    gdown.download(URL_B, ARQUIVO_B, quiet=False, fuzzy=True)
+    gdown.download(URL_B, ARQUIVO_B, quiet=False)
         
     logger.info("🔄 Baixando BASE - GRUPO T.csv do Google Drive...")
-    gdown.download(URL_T, ARQUIVO_T, quiet=False, fuzzy=True)
+    gdown.download(URL_T, ARQUIVO_T, quiet=False)
 
     logger.info("📊 Lendo e unindo os arquivos CSV de forma leve...")
     
-    # Lendo apenas as colunas essenciais ou os dados em blocos se necessário, com encoding latin-1
     df_b = pd.read_csv(ARQUIVO_B, sep=';', dtype=str, encoding='latin-1', low_memory=False, on_bad_lines='skip')
     df_t = pd.read_csv(ARQUIVO_T, sep=';', dtype=str, encoding='latin-1', low_memory=False, on_bad_lines='skip')
     
     df = pd.concat([df_b, df_t], ignore_index=True)
     df.columns = df.columns.str.strip()
     
-    # Libera memória RAM dos dataframes separados
     del df_b
     del df_t
     
@@ -343,7 +340,7 @@ async def limpar_agora(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ── Inicialização ──────────────────────────────────────────────────────────
 async def inicializar_bot(application):
-    print("🤖 Bot de Consulta iniciado com otimização de memória RAM!")
+    print("🤖 Bot de Consulta iniciado com sucesso!")
     await gerenciador.limpar_mensagens_diarias(application)
 
 # ── Main ───────────────────────────────────────────────────────────────────
